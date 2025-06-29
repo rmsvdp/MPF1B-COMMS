@@ -14,7 +14,8 @@
 
   Realizado por Alberto Alegre, Ramón Merchán, Juan Carlos Redondo
 
-  Última revisión: 10/06/2025
+  Última revisión: 29/06/2025
+        Se crea función para escribir los 8 bits en el puerto
 */
 
 #include <SPI.h>
@@ -39,7 +40,20 @@ File file;
 //  LÓGICA DE TRANSFERENCIA
 //======================================================================
 
-
+/*
+ * pushByte : Envia a los 8 pines asignados, los bits que componen
+ *            el byte que se pasa como parámetro
+ * CE:        _data : byte a exponer en los 8 pines
+ * Fecha:     29/06/2025
+ */
+void pushByte(byte _data) {
+  
+    // Recorre los 8 bits del byte y los pone en los pines de datos.
+    for (int i = 0; i < 8; i++) {
+    // (_data >> i) & 1  -> Extrae el i-ésimo bit (0 o 1) y lo usa para HIGH/LOW
+    digitalWrite(DATA_PINS[i], (_data >> i) & 1);
+    } // end for
+  } // en pushByte
 
 
 void txFake() {
@@ -54,7 +68,8 @@ void txFake() {
     char c = (char) (data+65);
     delay (5);              // esperar 500 msec
     bytesTransferred++;
-    digitalWrite(DATA_PINS[0],(data & 1));
+    //digitalWrite(DATA_PINS[0],(data & 1));
+    pushByte(data);
     delay(1500);
     Serial.print(c);
     Serial.print(".");
