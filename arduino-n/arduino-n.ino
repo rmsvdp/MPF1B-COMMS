@@ -14,15 +14,18 @@
 
   Realizado por Alberto Alegre, Ramón Merchán, Juan Carlos Redondo
 
-  Última revisión: 29/06/2025
-        Se crea función para escribir los 8 bits en el puerto
+  log de revisiones: 29/06/2025
+        29:06/2025  Se crea función para escribir los 8 bits en el puerto
+        01/07/2025  Añadida función de demostración ( count256() ) para probar todos los bits de comunicaciones
+                    NOTA HW: Se precisa alimentación estable externa de 5V. Añadida FA auxiliar
+          
 */
 
 #include <SPI.h>
 #include <SD.h>
 
 //--- CONFIGURACIÓN ---
-const char* FILENAME = "file.bin";            // Nombre del fichero a cargar
+const String FILENAME = "file.bin";              // Nombre del fichero a cargar
 const unsigned long MAX_RAM_SIZE_BYTES = 2048;  // Límite de la RAM del MPF-1 (2 KiB)
 const unsigned long SERIAL_TIMEOUT = 5000;      // Timeout para el monitor serie
 
@@ -31,7 +34,7 @@ const int SD_CS_PIN = 10;
 const int STB_PIN   = A0; // Strobe (OUTPUT)
 const int RDY_PIN   = A1; // Ready (INPUT)
 const int DATA_PINS[] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-const int KEY =  A2;
+const int EXTRA_PIN =  A2;
 
 //--- GLOBALES ---
 File file;
@@ -56,6 +59,41 @@ void pushByte(byte _data) {
   } // en pushByte
 
 
+/*
+ * count256() : prueba sobre los 8 gpios asignados para la transferencia. 
+ *              Se encuentra a nivel hw conectados a leds para verificación
+ *              visual. Se muestras las 256 combinaciones posibles
+ * Fecha:     01/07/2025
+ */
+void count256() {
+
+  Serial.println("[INFO] Contando de 0 a 255 ...");
+  byte data = 0;
+  int count = 0;
+  
+while (count < 256)
+{
+    pushByte(data);
+    delay(125);
+    Serial.print(data);
+    Serial.print(".");
+    data++;
+    count++;
+}   
+data = 0;
+pushByte(data);
+delay(1000);
+data = 255;
+pushByte(data);
+delay(1000);
+data = 0;
+pushByte(data);
+delay(1000);
+
+Serial.print("\n");
+
+}
+
 void txFake() {
 
   Serial.println(F("[INFO] Comenzando transferencia de datos..."));
@@ -66,7 +104,7 @@ void txFake() {
 
     byte data = file.read();
     char c = (char) (data+65);
-    delay (5);              // esperar 500 msec
+    delay (5);              // esperar 5 msec
     bytesTransferred++;
     //digitalWrite(DATA_PINS[0],(data & 1));
     pushByte(data);
@@ -78,12 +116,13 @@ void txFake() {
   }
 Serial.print("\n");
 
+
 }
 /**
  * @brief Realiza la transferencia completa del archivo, byte por byte.
  */
 void performTransfer() {
-  Serial.println(F("[INFO] Comenzando transferencia de datos..."));
+  Serial.println("[INFO] Comenzando transferencia de datos...");
   unsigned long bytesTransferred = 0;
   
   // Lee el archivo mientras haya bytes disponibles
@@ -99,22 +138,29 @@ void performTransfer() {
   }
 
   Serial.println(); // Salto de línea después de los puntos de progreso
-  Serial.print(F("[ÉXITO] Transferencia de archivo completada. Total de bytes: "));
+  Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
   Serial.println(bytesTransferred);
   
   // Opcional pero recomendado: enviar un byte NULO (0x00)
   // para indicar al Z80 que la transmisión ha terminado.
-  Serial.println(F("[INFO] Enviando byte de fin de transmisión (EOT)..."));
+  Serial.println("[INFO] Enviando byte de fin de transmisión (EOT)...");
   sendByteToPIO(0x00);
 
   file.close();
-  Serial.println(F("[INFO] Archivo cerrado."));
+  Serial.println("[INFO] Archivo cerrado.");
 }
 
 
-/**
- * @brief Envía un solo byte al PIO usando el protocolo de handshake.
- * @param data El byte de 8 bits a enviar.
+/*
+ *  sendByteToPIO() Escribe en el puerto A del pio el byte a transferir
+ *  El protocolo consiste en :
+ *      1. esperar a que el PIO esté listo para recibir: señal RDY_PortA a Low
+ *      2. escribir en el puerto A
+ *      3. Activar strobe del puerto B. Esto se consigue escribiendo en el bit 0 del 
+ *      puerto B y en el bit de strobe. Como el PIO no tendrá habilitada la interrupción
+ *      del Z80, del lado de uPF1 nos enteraremos por el cambio del valor de este bit en
+ *      el puerto B ( El strobe asegura una lectura correcta del bit)
+ *      4. Retraso intencionado del lado del Arduino para estabilizar la comunicación
  */
 void sendByteToPIO(byte data) {
   // 1. ESPERAR A QUE EL PIO ESTÉ LISTO
@@ -126,17 +172,17 @@ void sendByteToPIO(byte data) {
   }
 
   // 2. PONER EL DATO EN LOS PINES
-  // Recorre los 8 bits del byte y los pone en los pines de datos.
-  for (int i = 0; i < 8; i++) {
-    // (data >> i) & 1  -> Extrae el i-ésimo bit (0 o 1) y lo usa para HIGH/LOW
-    digitalWrite(DATA_PINS[i], (data >> i) & 1);
-  }
-
+  pushByte(data);
+  
   // 3. GENERAR EL PULSO STROBE (activo-bajo)
   // Este pulso le dice al PIO: "¡Ey, el dato está listo, captúralo!"
   digitalWrite(STB_PIN, LOW);
-  delayMicroseconds(5); // Pequeña pausa para asegurar la detección del flanco
+  delayMicroseconds(100); // 100 usec .Pequeña pausa para asegurar la detección del flanco
   digitalWrite(STB_PIN, HIGH);
+
+  // 4. Retraso intencionado para depuración / trazas / estabilización de las comunicaciones
+
+  delay(50); // 50 msec 
 }
 
 
@@ -148,7 +194,7 @@ void initializeSerial(unsigned long baudRate = 9600) {
   Serial.begin(baudRate);
   unsigned long startTime = millis();
   Serial.println(F("\n--- Cargador SD a Z80-PIO ---"));
-
+  Serial.println(F("\n--- 29/06/2025  ---"));
   Serial.println(F("[INFO] Esperando conexión del monitor serie..."));
   while (millis() - startTime < SERIAL_TIMEOUT) {
     if (Serial) {
@@ -167,6 +213,7 @@ void initializeControlPins() {
   // Estado inicial del Strobe: ALTO (inactivo para un pulso activo-bajo)
   digitalWrite(STB_PIN, HIGH);
   Serial.println(F("[ÉXITO] Pines de control configurados."));
+
 }
 
 void initializeDataPins() {
@@ -175,28 +222,30 @@ void initializeDataPins() {
     pinMode(DATA_PINS[i], OUTPUT);
     digitalWrite(DATA_PINS[i], LOW);
   }
-    pinMode(KEY,INPUT);
+
     
   Serial.println(F("[ÉXITO] Pines de datos configurados."));
 }
 
-void initializeSDCard() {
-  Serial.println(F("[INFO] Inicializando tarjeta SD..."));
-  if (!SD.begin(SD_CS_PIN)) {
-    Serial.println(F("[ERROR] No se pudo inicializar la tarjeta SD. Verifica conexiones."));
-    while (1);
-  }
-  Serial.println(F("[ÉXITO] Tarjeta SD inicializada."));
-
-  Serial.print(F("[INFO] Abriendo archivo para cargar en RAM: "));
-  Serial.println(FILENAME);
-  file = SD.open(FILENAME, FILE_READ);
+/*
+ * checkFile()    Comprueba si el archivo solicitado es válido para la transferencia
+ * Las condiciones en las que un archivo es válido son las siguientes:
+ *                - El archivo existe en la SD
+ *                - El archivo tiene un tamaño no superior a 2K ( máxima RAM del upF1b)
+ * CE:            Nombre del archivo
+ * CS:            false (0) : archivo no válido
+ *                true  (1) : archivo válido
+ * fecha:         01/07/2025
+ */
+boolean checkFile(String _fich) {
+  
+    file = SD.open(_fich, FILE_READ);
 
   if (!file) {
     Serial.print(F("[ERROR] No se pudo abrir el archivo '"));
-    Serial.print(FILENAME);
+    Serial.print(_fich);
     Serial.println(F("'"));
-    while (1);
+    return false;
   }
 
   unsigned long fileSize = file.size();
@@ -207,7 +256,7 @@ void initializeSDCard() {
   if (fileSize == 0) {
     Serial.println(F("[ERROR] El archivo está vacío."));
     file.close();
-    while (1);
+    return false;
   }
 
   if (fileSize > MAX_RAM_SIZE_BYTES) {
@@ -217,9 +266,29 @@ void initializeSDCard() {
     Serial.print(F("        - Tamaño del archivo encontrado: "));
     Serial.println(fileSize);
     file.close();
+    return false;
+  }
+    file.close();
+    return true;
+  }
+
+/*
+ * initializeSDCard . Compueba el funcionamiento de la SD
+ * CS:        El programa se bloquea si no se puede inicializar la SD
+ */
+ 
+void initializeSDCard() {
+  Serial.println(F("[INFO] Inicializando tarjeta SD..."));
+  if (!SD.begin(SD_CS_PIN)) {
+    Serial.println(F("[ERROR] No se pudo inicializar la tarjeta SD. Verifica conexiones."));
     while (1);
   }
-  Serial.println(F("[ÉXITO] El tamaño del archivo es válido para la RAM."));
+  Serial.println(F("[ÉXITO] Tarjeta SD inicializada."));
+/*
+  Serial.print(F("[INFO] Abriendo archivo para cargar en RAM: "));
+  Serial.println(FILENAME);
+  file = SD.open(FILENAME, FILE_READ);
+*/
 }
 
 
@@ -230,10 +299,10 @@ void initializeSDCard() {
 //======================================================================
 void setup() {
   initializeSerial();
-  initializeControlPins();
+  //initializeControlPins();
   initializeDataPins();
   initializeSDCard();
-
+  if (!checkFile(FILENAME)) while(1);          // Comprueba la validez del archivo
   Serial.println(F("-------------------------------------------------"));
   Serial.println(F("[INFO] La configuración ha finalizado."));
   Serial.println(F("[INFO] La transferencia comenzará en 3 segundos..."));
@@ -247,7 +316,8 @@ void loop() {
    // while(1);
   //performTransfer();
   // La transferencia ha terminado, detenemos el programa.
-  txFake();
+  count256();
+  // txFake();
   Serial.println(F("[INFO] Programa finalizado. Reinicia para volver a ejecutar."));
   while(1);
 }
