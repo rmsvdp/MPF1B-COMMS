@@ -8,6 +8,7 @@ MODE0   EQU     $0F            ; OUTPUT
 MODE1   EQU     $4F            ; INPUT
 MODE2   EQU     $BF            ; BIDIRECCIONAL
 MODE3   EQU     $CF            ; BIT CONTROL
+;------------------------------------------------------------
 INICIO  CALL    RDBLK;
         HALT
 ;  Cargar programa en codigo máquina desde arduino

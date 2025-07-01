@@ -137,24 +137,46 @@ Serial.print("\n");
 
 }
 
-void testPIO(byte dato[]) {
+/* waitKey : espera a que se pulse la tecla _key antes
+ *  de devolver el control al programa
+ *  CE: Puerto serie inicializado
+ *      _key tecla que se espera
+ */
+void waitKey(char _key) {
+
+boolean salir = false;
+
+  while (!salir) {
+  
+    if (Serial.available() > 0) {
+     char recibido = Serial.read(); // Lee el carácter recibido   
+    if (recibido == _key) salir = true;
+    } // if serialAvailable  
+  
+  } // while !salir
+
+
+} // waitKey
+
+void testPIO(byte dato[], int tam) {
   Serial.println("[INFO] Comenzando transferencia de datos...");
-  int bytesTransferred = 0;
+  int bytesCnt = 0;
 
 
-  while (bytesTransferred<  sizeof(mc1)) {
-    byte data = dato[bytesTransferred];
-   // sendByteToPIO(data);
-    bytesTransferred++;
+  while (bytesCnt< tam) {
+    byte data = dato[bytesCnt];
+
+    bytesCnt++;
     // Imprime el valor en el monitor
     Serial.print(data);
-    Serial.print(" . ");
-    delay(3000);          // Espero 3 segundos para ver el resultado en los leds
+    Serial.print(" > ");
+    waitKey('0');
+    sendByteToPIO(data);
   } // while file.available()
 
   Serial.println(); // Salto de línea después de los puntos de progreso
   Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
-  Serial.println(bytesTransferred);
+  Serial.println(bytesCnt);
 
 }
 
@@ -211,7 +233,7 @@ void sendByteToPIO(byte data) {
   // Nos quedamos esperando mientras esté en HIGH (ocupado).
   while (digitalRead(RDY_PIN) == HIGH) {
     Serial.println(F("[INFO] Esperando a que el Z80 procese el byte anterior..."));
-    delay(5); // 5 msec pausa
+    delay(500); // 500 msec pausa
   }
 
   // 2. PONER EL DATO EN LOS PINES
@@ -220,7 +242,7 @@ void sendByteToPIO(byte data) {
   // 3. GENERAR EL PULSO STROBE (activo-bajo)
   // Este pulso le dice al PIO: "¡Ey, el dato está listo, captúralo!"
   digitalWrite(STB_PIN, LOW);
-  delayMicroseconds(100); // 100 usec .Pequeña pausa para asegurar la detección del flanco
+  delay(5); // 5 msec .Pequeña pausa para asegurar la detección del flanco
   digitalWrite(STB_PIN, HIGH);
 
   // 4. Retraso intencionado para depuración / trazas / estabilización de las comunicaciones
@@ -359,7 +381,7 @@ void loop() {
    // while(1);
   //performTransfer(FILENAME);
   // La transferencia ha terminado, detenemos el programa.
-  testPIO(mc0);
+  testPIO(mc0, sizeof(mc0));
   // count256();
   // txFake();
   Serial.println(F("[INFO] Programa finalizado. Reinicia para volver a ejecutar."));
