@@ -39,6 +39,25 @@ const int EXTRA_PIN =  A2;
 //--- GLOBALES ---
 File file;
 
+/* Programa ejemplo para test sin el uso de la SD
+ * ORG     $1900
+;       Cabecera de 6 bytes
+SADDR   EQU     $
+TAM     EQU     FIN-INICIO+1
+START   DEFW    SADDR
+LENGTH  DEFW    TAM
+RUN     DEFW    INICIO
+INICIO  LD      A,3
+        LD      B,5
+        ADD     A,B
+        LD      (RESULT),A
+        HALT
+RESULT  DEFB    0        
+FIN     NOP
+ */
+uint8_t mc0[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x01,0x02,0x04,0x08,0x10,0x20,0x30,0X40,0x00};
+uint8_t mc1[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x3E,0x06,0x05,0x80,0x32,0x0F,0x19,0X76,0x00};
+
 //======================================================================
 //  LÓGICA DE TRANSFERENCIA
 //======================================================================
@@ -116,15 +135,38 @@ void txFake() {
   }
 Serial.print("\n");
 
+}
+
+void testPIO(byte dato[]) {
+  Serial.println("[INFO] Comenzando transferencia de datos...");
+  int bytesTransferred = 0;
+
+
+  while (bytesTransferred<  sizeof(mc1)) {
+    byte data = dato[bytesTransferred];
+   // sendByteToPIO(data);
+    bytesTransferred++;
+    // Imprime el valor en el monitor
+    Serial.print(data);
+    Serial.print(" . ");
+    delay(3000);          // Espero 3 segundos para ver el resultado en los leds
+  } // while file.available()
+
+  Serial.println(); // Salto de línea después de los puntos de progreso
+  Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
+  Serial.println(bytesTransferred);
 
 }
+
+
 /**
  * @brief Realiza la transferencia completa del archivo, byte por byte.
  */
-void performTransfer() {
+void performTransfer(String _fich) {
   Serial.println("[INFO] Comenzando transferencia de datos...");
   unsigned long bytesTransferred = 0;
-  
+
+  file = SD.open(_fich, FILE_READ);
   // Lee el archivo mientras haya bytes disponibles
   while (file.available()) {
     byte data = file.read();
@@ -135,16 +177,17 @@ void performTransfer() {
     if (bytesTransferred % 64 == 0) {
       Serial.print(F("."));
     }
-  }
+  } // while file.available()
 
   Serial.println(); // Salto de línea después de los puntos de progreso
   Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
   Serial.println(bytesTransferred);
-  
+  /*
   // Opcional pero recomendado: enviar un byte NULO (0x00)
   // para indicar al Z80 que la transmisión ha terminado.
   Serial.println("[INFO] Enviando byte de fin de transmisión (EOT)...");
   sendByteToPIO(0x00);
+  */
 
   file.close();
   Serial.println("[INFO] Archivo cerrado.");
@@ -164,11 +207,11 @@ void performTransfer() {
  */
 void sendByteToPIO(byte data) {
   // 1. ESPERAR A QUE EL PIO ESTÉ LISTO
-  // El Z80/PIO pone RDY en LOW cuando está listo para recibir un nuevo byte.
+  // El Z80/PIO pone RDY_PA en LOW cuando está listo para recibir un nuevo byte.
   // Nos quedamos esperando mientras esté en HIGH (ocupado).
   while (digitalRead(RDY_PIN) == HIGH) {
     Serial.println(F("[INFO] Esperando a que el Z80 procese el byte anterior..."));
-    delay(1000);
+    delay(5); // 5 msec pausa
   }
 
   // 2. PONER EL DATO EN LOS PINES
@@ -210,8 +253,8 @@ void initializeControlPins() {
   Serial.println(F("[INFO] Configurando pines de control (STB/RDY)..."));
   pinMode(STB_PIN, OUTPUT);
   pinMode(RDY_PIN, INPUT);
-  // Estado inicial del Strobe: ALTO (inactivo para un pulso activo-bajo)
-  digitalWrite(STB_PIN, HIGH);
+  // Estado inicial del Strobe: BAJO (inactivo para un pulso bajo-alto12º          )
+  digitalWrite(STB_PIN, LOW);       // Nos aseguramos que el strobe del puerto B y el bit 0 del puerto quedan a 0
   Serial.println(F("[ÉXITO] Pines de control configurados."));
 
 }
@@ -298,11 +341,11 @@ void initializeSDCard() {
 //  SETUP
 //======================================================================
 void setup() {
-  initializeSerial();
-  //initializeControlPins();
-  initializeDataPins();
-  initializeSDCard();
-  if (!checkFile(FILENAME)) while(1);          // Comprueba la validez del archivo
+  initializeSerial();                             // Inicializa puerto serie
+  initializeControlPins();                        // Inicializa gpios de control
+  initializeDataPins();                           // Inicializa gpios para puerto A del Z80 PIO
+  //initializeSDCard();                             // Inicializa SD card
+  //if (!checkFile(FILENAME)) while(1);             // Comprueba la validez del archivo
   Serial.println(F("-------------------------------------------------"));
   Serial.println(F("[INFO] La configuración ha finalizado."));
   Serial.println(F("[INFO] La transferencia comenzará en 3 segundos..."));
@@ -314,9 +357,10 @@ void setup() {
 //======================================================================
 void loop() {
    // while(1);
-  //performTransfer();
+  //performTransfer(FILENAME);
   // La transferencia ha terminado, detenemos el programa.
-  count256();
+  testPIO(mc0);
+  // count256();
   // txFake();
   Serial.println(F("[INFO] Programa finalizado. Reinicia para volver a ejecutar."));
   while(1);

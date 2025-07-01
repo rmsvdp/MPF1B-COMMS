@@ -2,7 +2,7 @@
 ORG     $1900
 ;       Cabecera de 6 bytes
 SADDR   EQU     $
-TAM     EQU     FIN-INICIO
+TAM     EQU     FIN-INICIO+1
 START   DEFW    SADDR
 LENGTH  DEFW    TAM
 RUN     DEFW    INICIO
