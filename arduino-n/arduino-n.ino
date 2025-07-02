@@ -55,7 +55,7 @@ INICIO  LD      A,3
 RESULT  DEFB    0        
 FIN     NOP
  */
-uint8_t mc0[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x01,0x02,0x04,0x08,0x10,0x20,0x30,0X40,0x00};
+uint8_t mc0[] = { 0x00,0x0f,0xf0,0xff};
 uint8_t mc1[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x3E,0x06,0x05,0x80,0x32,0x0F,0x19,0X76,0x00};
 
 //======================================================================
@@ -125,7 +125,6 @@ void txFake() {
     char c = (char) (data+65);
     delay (5);              // esperar 5 msec
     bytesTransferred++;
-    //digitalWrite(DATA_PINS[0],(data & 1));
     pushByte(data);
     delay(1500);
     Serial.print(c);
@@ -228,26 +227,18 @@ void performTransfer(String _fich) {
  *      4. Retraso intencionado del lado del Arduino para estabilizar la comunicación
  */
 void sendByteToPIO(byte data) {
-  // 1. ESPERAR A QUE EL PIO ESTÉ LISTO
-  // El Z80/PIO pone RDY_PA en LOW cuando está listo para recibir un nuevo byte.
-  // Nos quedamos esperando mientras esté en HIGH (ocupado).
-  while (digitalRead(RDY_PIN) == HIGH) {
-    Serial.println(F("[INFO] Esperando a que el Z80 procese el byte anterior..."));
-    delay(500); // 500 msec pausa
-  }
 
-  // 2. PONER EL DATO EN LOS PINES
-  pushByte(data);
-  
-  // 3. GENERAR EL PULSO STROBE (activo-bajo)
-  // Este pulso le dice al PIO: "¡Ey, el dato está listo, captúralo!"
-  digitalWrite(STB_PIN, LOW);
-  delay(5); // 5 msec .Pequeña pausa para asegurar la detección del flanco
-  digitalWrite(STB_PIN, HIGH);
 
-  // 4. Retraso intencionado para depuración / trazas / estabilización de las comunicaciones
-
-  delay(50); // 50 msec 
+  // 1. Bit de control a 1 para que espere el z80
+        digitalWrite(STB_PIN, HIGH);
+  // 2. Escribir dato en puerto A
+        pushByte(data);
+  // 3. Generar pulso para que lea el z80
+        digitalWrite(STB_PIN, LOW);
+        delay(50); // 50 msec Pausa para detección de flanco
+        digitalWrite(STB_PIN, HIGH);  activar flanco
+  // 4. Retraso adicional
+        delay(50); // 50 msec .Pausa para asegurar lectura
 }
 
 
