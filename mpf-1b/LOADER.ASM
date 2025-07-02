@@ -4,10 +4,9 @@ PA      EQU     $80
 PB      EQU     $81
 CA      EQU     $82
 CB      EQU     $83
-MODE0   EQU     $0F            ; OUTPUT
-MODE1   EQU     $4F            ; INPUT
-MODE2   EQU     $BF            ; BIDIRECCIONAL
-MODE3   EQU     $CF            ; BIT CONTROL
+OUTPUT  EQU     $0F            ; OUTPUT
+INPUT   EQU     $4F            ; INPUT
+
 ;------------------------------------------------------------
 INICIO  CALL    RDBLK;
         HALT
@@ -50,9 +49,9 @@ RD_MC   CALL RD_BYTE
 ;-------------------------
 ; Inicializa el GIPO configurando el puerto A y el puerto B de entrada
 ; del puerto B sólo se utiliza el bit 0
-INIT    LD  A,$4F
+INIT    LD  A,INPUT
         OUT  (CA),A
-        LD  A,$BF
+        LD  A,$CF       ; 1100 1111b
         OUT  (CB),A
         LD  A,$FF
         OUT  (CB),A
@@ -66,11 +65,11 @@ INIT    LD  A,$4F
 ; el flanco de subida del bit 0 del puerto B)
 ;-----------------------------------------------
 RD_BYTE IN A,(PB)        ; lee estado pin 0
-        AND $01;            ; aislo el bit 0
-        JR Z,RD_BYTE        ; espero que pase a 1
+        BIT 0,A          ; Test bit 0
+        JR NZ,RD_BYTE     
 RISE    IN A,(PB)
-        AND $01
-        JR NZ, RISE
+        BIT 0,A          ; Test bit 0
+        JR Z, RISE
 GETDATA IN A,(PA)
         RET
 
