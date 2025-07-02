@@ -1,3 +1,13 @@
+;-----------------------------
+; NOTA DEL 02/07/2025
+; Parece ser que los bits 1,2 y 7 del puerto A
+; no funcionan en la ultima configuración del hw
+; se han probado distintos delays y no influye
+; se ha probado cjtos de datos sobre los pines
+; 'buenos' y los envia-recibe correctamente
+; ---------------------------------
+
+
 ORG     $1800
 ; puertos pio en microprofessor 1b        
 PA      EQU     $80

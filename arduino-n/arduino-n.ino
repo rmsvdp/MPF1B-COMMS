@@ -31,15 +31,17 @@ const unsigned long SERIAL_TIMEOUT = 5000;      // Timeout para el monitor serie
 
 //--- PINES ---
 const int SD_CS_PIN = 10;
-const int STB_PIN   = A0; // Strobe (OUTPUT)
-const int RDY_PIN   = A1; // Ready (INPUT)
+const int STB_PIN   = A0; // Strobe (OUTPUT) bit0 PUERTO B Z80PIO
+const int AUX_PIN1  = A1;  // Ready (INPUT)   -- sin usuar --
+const int AUX_PIN2  = A2;  //                   -- reservado --
 const int DATA_PINS[] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-const int EXTRA_PIN =  A2;
+
 
 //--- GLOBALES ---
 File file;
 
-/* Programa ejemplo para test sin el uso de la SD
+uint8_t mc0[] = { 0x38,0x39,0x38,0x39};
+/* Programa ejemplo para test sin el uso de la SD mc1
  * ORG     $1900
 ;       Cabecera de 6 bytes
 SADDR   EQU     $
@@ -55,7 +57,6 @@ INICIO  LD      A,3
 RESULT  DEFB    0        
 FIN     NOP
  */
-uint8_t mc0[] = { 0x00,0x0f,0xf0,0xff};
 uint8_t mc1[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x3E,0x06,0x05,0x80,0x32,0x0F,0x19,0X76,0x00};
 
 //======================================================================
@@ -77,6 +78,36 @@ void pushByte(byte _data) {
     } // end for
   } // en pushByte
 
+/*
+ *  sendByteToPIO() Escribe en el puerto A del pio el byte a transferir
+ *  El protocolo consiste en :
+ *      1. esperar a que el PIO esté listo para recibir: señal RDY_PortA a Low
+ *      2. escribir en el puerto A
+ *      3. Activar strobe del puerto B. Esto se consigue escribiendo en el bit 0 del 
+ *      puerto B y en el bit de strobe. Como el PIO no tendrá habilitada la interrupción
+ *      del Z80, del lado de uPF1 nos enteraremos por el cambio del valor de este bit en
+ *      el puerto B ( El strobe asegura una lectura correcta del bit)
+ *      4. Retraso intencionado del lado del Arduino para estabilizar la comunicación
+ */
+void sendByteToPIO(byte data) {
+
+
+  // 1. Bit de control a 1 para que espere el z80
+        digitalWrite(STB_PIN, HIGH);
+      //  waitKey('0',"STB HIGH EN BIT0 PUERTO B");
+  // 2. Escribir dato en puerto A
+        pushByte(data);
+     //   waitKey('0',"ENVIADO DATO A PUERTO B");
+  // 3. Generar pulso para que lea el z80
+        digitalWrite(STB_PIN, LOW);
+       // waitKey('0',"FLANCO STB A LOW: ATENTO Z80");
+        delay(500); // 50 msec Pausa para detección de flanco
+        digitalWrite(STB_PIN, HIGH);  //activar flanco
+       // waitKey('0',"STB A HIGH : LEE!");
+  // 4. Retraso adicional
+        delay(1000); // 50 msec .Pausa para asegurar lectura
+     //   waitKey('0',"VOY POR EL SIGUIENTE!");
+}
 
 /*
  * count256() : prueba sobre los 8 gpios asignados para la transferencia. 
@@ -113,6 +144,9 @@ Serial.print("\n");
 
 }
 
+//--------------------------------------------------------------
+//-- FUNCIONES DE PRUEBA
+//-------------------------------------------------------------- 
 void txFake() {
 
   Serial.println(F("[INFO] Comenzando transferencia de datos..."));
@@ -141,10 +175,12 @@ Serial.print("\n");
  *  CE: Puerto serie inicializado
  *      _key tecla que se espera
  */
-void waitKey(char _key) {
+void waitKey(char _key,String msg) {
 
 boolean salir = false;
 
+  Serial.print(msg);
+  Serial.print("\n");
   while (!salir) {
   
     if (Serial.available() > 0) {
@@ -157,8 +193,13 @@ boolean salir = false;
 
 } // waitKey
 
+/*
+ * testPIO :  Envia una secuencia de bytes fija definidos en un
+ *            array de memoria. Hace uso de la función waitKey
+ *            para trazar el proceso desde el lado del arduino
+ */
 void testPIO(byte dato[], int tam) {
-  Serial.println("[INFO] Comenzando transferencia de datos...");
+  Serial.println("[testPIO] Inicio ... ");
   int bytesCnt = 0;
 
 
@@ -169,12 +210,11 @@ void testPIO(byte dato[], int tam) {
     // Imprime el valor en el monitor
     Serial.print(data);
     Serial.print(" > ");
-    waitKey('0');
     sendByteToPIO(data);
-  } // while file.available()
+  } // while bytesCnt < tam)
 
   Serial.println(); // Salto de línea después de los puntos de progreso
-  Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
+  Serial.print("[testPIO] Fin.- Total de bytes: ");
   Serial.println(bytesCnt);
 
 }
@@ -215,31 +255,7 @@ void performTransfer(String _fich) {
 }
 
 
-/*
- *  sendByteToPIO() Escribe en el puerto A del pio el byte a transferir
- *  El protocolo consiste en :
- *      1. esperar a que el PIO esté listo para recibir: señal RDY_PortA a Low
- *      2. escribir en el puerto A
- *      3. Activar strobe del puerto B. Esto se consigue escribiendo en el bit 0 del 
- *      puerto B y en el bit de strobe. Como el PIO no tendrá habilitada la interrupción
- *      del Z80, del lado de uPF1 nos enteraremos por el cambio del valor de este bit en
- *      el puerto B ( El strobe asegura una lectura correcta del bit)
- *      4. Retraso intencionado del lado del Arduino para estabilizar la comunicación
- */
-void sendByteToPIO(byte data) {
 
-
-  // 1. Bit de control a 1 para que espere el z80
-        digitalWrite(STB_PIN, HIGH);
-  // 2. Escribir dato en puerto A
-        pushByte(data);
-  // 3. Generar pulso para que lea el z80
-        digitalWrite(STB_PIN, LOW);
-        delay(50); // 50 msec Pausa para detección de flanco
-        digitalWrite(STB_PIN, HIGH);  activar flanco
-  // 4. Retraso adicional
-        delay(50); // 50 msec .Pausa para asegurar lectura
-}
 
 
 //======================================================================
@@ -265,9 +281,9 @@ void initializeSerial(unsigned long baudRate = 9600) {
 void initializeControlPins() {
   Serial.println(F("[INFO] Configurando pines de control (STB/RDY)..."));
   pinMode(STB_PIN, OUTPUT);
-  pinMode(RDY_PIN, INPUT);
+  pinMode(AUX_PIN1, INPUT);
   // Estado inicial del Strobe: BAJO (inactivo para un pulso bajo-alto12º          )
-  digitalWrite(STB_PIN, LOW);       // Nos aseguramos que el strobe del puerto B y el bit 0 del puerto quedan a 0
+  digitalWrite(STB_PIN, HIGH);       // bit0 del puerto B HIGH para detener Z80
   Serial.println(F("[ÉXITO] Pines de control configurados."));
 
 }
@@ -276,7 +292,7 @@ void initializeDataPins() {
   Serial.println(F("[INFO] Configurando pines de datos (PA0-PA7)..."));
   for (int i = 0; i < 8; i++) {
     pinMode(DATA_PINS[i], OUTPUT);
-    digitalWrite(DATA_PINS[i], LOW);
+    digitalWrite(DATA_PINS[i], LOW); // Valor 0x00 por defecto
   }
 
     
@@ -369,12 +385,12 @@ void setup() {
 //  LOOP PRINCIPAL (se ejecuta una sola vez)
 //======================================================================
 void loop() {
-   // while(1);
+
+  testPIO(mc0, sizeof(mc0));
+  // count256(); // Prueba de activación de leds (comprobar asignación correcta de pines)
+  // txFake();   // Prueba de envío de datos con salida por puerto serie
   //performTransfer(FILENAME);
   // La transferencia ha terminado, detenemos el programa.
-  testPIO(mc0, sizeof(mc0));
-  // count256();
-  // txFake();
   Serial.println(F("[INFO] Programa finalizado. Reinicia para volver a ejecutar."));
   while(1);
 }
