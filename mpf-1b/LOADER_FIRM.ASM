@@ -1,8 +1,8 @@
-;-----------------------------
-; NOTA DEL 03/07/2025
-; No se estaba usando la señal de /ASTB para
-; validar los datos en el PA
-; Aún así el bit 1 del PA siempre queda a 0
+;------------------------------------------------------------
+; LOADER_FIRM.ASM
+; 03/07/2025
+; RMS
+;------------------------------------------------------------
 
 ORG     $1800
 ; puertos pio en microprofessor 1b        
@@ -15,33 +15,28 @@ INPUT   EQU     $4F            ; INPUT
 CONTROL EQU     $CF            ; CONTROL
 
 ;------------------------------------------------------------
-; Este programa lee 4 bytes consecutivos, de acuerdo al 
-; protocolo implementado en TEST_04.ASM
-; Se han invertido los puertos, ahora PB es de entrada y PA
-; es de control en su bit 0 ( que si funcionaba)
-; es preciso cambiar /ASTB por /BSTB
+; Este programa carga el programa cargador que interactúa
+; con arduino. Lo ubica en $2000
 ;------------------------------------------------------------
 
+; -- Inicializa GPIO ----------------------------------------
 INIT    LD      A,INPUT    ; código de entrada
         OUT     (CB),A     ; puerto B
         LD      A,CONTROL  ; 1100 1111b
         OUT     (CA),A     ; Puerto A de control
         LD      A,$FF      ; Todo entradas
         OUT     (CA),A
-        LD      HL,$1900   ; buffer de recepcción     
-RDHEAD  CALL    RD_BYTE    ; byte 1
-        LD      (HL),A       
-        INC     HL
-        CALL    RD_BYTE    ; byte 2
-        LD      (HL),A       
-        INC     HL
-        CALL    RD_BYTE    ; byte 3
-        LD      (HL),A       
-        INC     HL
-        CALL    RD_BYTE    ; byte 4     
-        LD      (HL),A       
-        INC     HL       
-        HALT
+;       Lee loader -----------------------------------------
+        LD      DE,$2000
+        LD      BC,72      ; 72 bytes
+RD_MC   CALL RD_BYTE
+        LD   (DE),A
+        INC  DE
+        DEC  BC
+        LD   A,B
+        OR   C
+        JR   NZ, RD_MC
+        HALT 
 ;-----------------------------------------------
 ;RD_BYTE : Lee de forma asíncrona un byte
 ;CE :       PIO inicializado
