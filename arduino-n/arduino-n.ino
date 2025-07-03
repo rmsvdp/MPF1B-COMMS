@@ -31,7 +31,7 @@ const unsigned long SERIAL_TIMEOUT = 5000;      // Timeout para el monitor serie
 
 //--- PINES ---
 const int SD_CS_PIN = 10;
-const int STB_PIN   = A0; // Strobe (OUTPUT) bit0 PUERTO B Z80PIO
+const int STB_PIN   = A0; // Strobe (OUTPUT) bit0 PUERTO B Z80PIO y /ASTB
 const int AUX_PIN1  = A1;  // Ready (INPUT)   -- sin usuar --
 const int AUX_PIN2  = A2;  //                   -- reservado --
 const int DATA_PINS[] = { 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -40,7 +40,7 @@ const int DATA_PINS[] = { 2, 3, 4, 5, 6, 7, 8, 9 };
 //--- GLOBALES ---
 File file;
 
-uint8_t mc0[] = { 0x38,0x39,0x38,0x39};
+uint8_t mc0[] = { 0x00,0x0f,0xf0,0xff};
 /* Programa ejemplo para test sin el uso de la SD mc1
  * ORG     $1900
 ;       Cabecera de 6 bytes

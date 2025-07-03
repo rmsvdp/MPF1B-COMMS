@@ -1,12 +1,5 @@
 ;-----------------------------
-; NOTA DEL 02/07/2025
-; Parece ser que los bits 1,2 y 7 del puerto A
-; no funcionan en la ultima configuración del hw
-; se han probado distintos delays y no influye
-; se ha probado cjtos de datos sobre los pines
-; 'buenos' y los envia-recibe correctamente
-; ---------------------------------
-; 03/07/2025
+; NOTA DEL 03/07/2025
 ; No se estaba usando la señal de /ASTB para
 ; validar los datos en el PA
 ; Aún así el bit 1 del PA siempre queda a 0
@@ -19,20 +12,22 @@ CA      EQU     $82
 CB      EQU     $83
 OUTPUT  EQU     $0F            ; OUTPUT
 INPUT   EQU     $4F            ; INPUT
+CONTROL EQU     $CF            ; CONTROL
 
 ;------------------------------------------------------------
 ; Este programa lee 4 bytes consecutivos, de acuerdo al 
-; protocolo implementado en TEST_02.ASM
-; cuando se detiene la ejecución la información está
-; a partir de $1900
+; protocolo implementado en TEST_04.ASM
+; Se han invertido los puertos, ahora PB es de entrada y PA
+; es de control en su bit 0 ( que si funcionaba)
+; es preciso cambiar /BSTB por /BSTB
 ;------------------------------------------------------------
 
-INIT    LD  A,INPUT
+INIT    LD  A,INPUT     ; código de entrada
+        OUT  (CB),A     ; puerto B
+        LD  A,CONTROL   ; 1100 1111b
+        OUT  (CA),A     ; Puerto A de control
+        LD  A,$FF       ; Todo entradas
         OUT  (CA),A
-        LD  A,$CF       ; 1100 1111b
-        OUT  (CB),A
-        LD  A,$FF
-        OUT  (CB),A
         LD HL,$1900
 RDHEAD  CALL    RD_BYTE
         LD      (HL),A       
@@ -52,15 +47,15 @@ RDHEAD  CALL    RD_BYTE
 ;CE :       PIO inicializado
 ;CS :       A = Byte recibido
 ; el z80 se queda esperando a que la linea strobe ( igual al bit 0 del
-; puerto B se estabilice a cero. Despues no leerá el puerto A hasta
-; el flanco de subida del bit 0 del puerto B)
+; puerto B se estabilice a cero. Despues no leerá el puerto B hasta
+; el flanco de subida del bit 0 del puerto A)
 ;-----------------------------------------------
-RD_BYTE IN A,(PB)        ; lee estado pin 0
+RD_BYTE IN A,(PA)        ; lee estado pin 0
         BIT 0,A          ; Test bit 0
         JR NZ,RD_BYTE     
-RISE    IN A,(PB)
+RISE    IN A,(PA)
         BIT 0,A          ; Test bit 0
         JR Z, RISE
-GETDATA IN A,(PA)
+GETDATA IN A,(PB)
         RET
 ;-----------------------------------------------
