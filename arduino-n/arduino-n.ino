@@ -32,35 +32,31 @@ const unsigned long SERIAL_TIMEOUT = 5000;      // Timeout para el monitor serie
 //--- PINES ---
 const int SD_CS_PIN = 10;
 const int STB_PIN   = A0; // Strobe (OUTPUT) bit0 PUERTO B Z80PIO y /ASTB
-const int AUX_PIN1  = A1;  // Ready (INPUT)   -- sin usuar --
-const int AUX_PIN2  = A2;  //                   -- reservado --
+const int AUX_PIN1  = A1; // Ready (INPUT)   -- sin usuar --
+const int AUX_PIN2  = A2; // Modo de operación: (INPUT)
+                          //   LOW   -- Envía archivo de la SD --
+                          //   HIGH  -- Carga loader en MPF-I  --
 const int DATA_PINS[] = { 2, 3, 4, 5, 6, 7, 8, 9 };
-
+const int _DELAY = 25;    // msec a esperar para sincronizar con Z80
 
 //--- GLOBALES ---
 File file;
 
-uint8_t firmware[] = {0x3e,0x4f,0xd3,0x83,0x3e,0xcf,0xd3,0x82,
-                      0x3e,0xff,0xd3,0x82,0x11,0x00,0x20,0x01,
-                      0x48,0x00,0xcd,0x1d};
-uint8_t mc0[] = { 0x00,0x0f,0xf0,0xff};
-/* Programa ejemplo para test sin el uso de la SD mc1
- * ORG     $1900
-;       Cabecera de 6 bytes
-SADDR   EQU     $
-TAM     EQU     FIN-INICIO+1
-START   DEFW    SADDR
-LENGTH  DEFW    TAM
-RUN     DEFW    INICIO
-INICIO  LD      A,3
-        LD      B,5
-        ADD     A,B
-        LD      (RESULT),A
-        HALT
-RESULT  DEFB    0        
-FIN     NOP
+/*  Loader final que gestiona cargas posicionadas
+ *  con autoejecución
  */
-uint8_t mc1[] = { 0x00,0x19,0x0B,0x00,0x06,0x19,0x3E,0x06,0x05,0x80,0x32,0x0F,0x19,0X76,0x00};
+uint8_t loader[] = {  0x3e,0x4f,0xd3,0x83,0x3e,0xcf,0xd3,0x82,
+                      0x3e,0xff,0xd3,0x82,0xcd,0x37,0x20,0x57,
+                      0xcd,0x37,0x20,0x5f,0xcd,0x37,0x20,0x47,
+                      0xcd,0x37,0x20,0x4f,0xcd,0x37,0x20,0x67,
+                      0xcd,0x37,0x20,0x6f,0xcd,0x37,0x20,0xcd,
+                      0x46,0x20,0x12,0x13,0x0b,0x78,0xb1,0x20,
+                      0xf3,0x7c,0xb5,0x28,0x01,0x76,0xe9,0xdb,
+                      0x80,0xcb,0x47,0x20,0xfa,0xdb,0x80,0xcb,
+                      0x47,0x28,0xfa,0xdb,0x81,0xc9,0x00,0xc9};
+
+// Secuencia de test para todos los bits del puerto del Z80 PIO
+uint8_t mc0[] = { 0x00,0x0f,0xf0,0xff};
 
 //======================================================================
 //  LÓGICA DE TRANSFERENCIA
@@ -94,22 +90,17 @@ void pushByte(byte _data) {
  */
 void sendByteToPIO(byte data) {
 
-
-  // 1. Bit de control a 1 para que espere el z80
+  
+  // 1. Bit de control debería estar a 1 para que espere el z80
         digitalWrite(STB_PIN, HIGH);
-      //  waitKey('0',"STB HIGH EN BIT0 PUERTO B");
-  // 2. Escribir dato en puerto A
+  // 2. Escribir dato en puerto B
         pushByte(data);
-     //   waitKey('0',"ENVIADO DATO A PUERTO B");
   // 3. Generar pulso para que lea el z80
         digitalWrite(STB_PIN, LOW);
-       // waitKey('0',"FLANCO STB A LOW: ATENTO Z80");
-        delay(500); // 50 msec Pausa para detección de flanco
+        delay(_DELAY); // 25 msec Pausa para detección de flanco
         digitalWrite(STB_PIN, HIGH);  //activar flanco
-       // waitKey('0',"STB A HIGH : LEE!");
   // 4. Retraso adicional
-        delay(1000); // 50 msec .Pausa para asegurar lectura
-     //   waitKey('0',"VOY POR EL SIGUIENTE!");
+        delay(_DELAY); // 25 msec .Pausa para asegurar lectura
 }
 
 /*
@@ -246,13 +237,6 @@ void performTransfer(String _fich) {
   Serial.println(); // Salto de línea después de los puntos de progreso
   Serial.print("[ÉXITO] Transferencia de archivo completada. Total de bytes: ");
   Serial.println(bytesTransferred);
-  /*
-  // Opcional pero recomendado: enviar un byte NULO (0x00)
-  // para indicar al Z80 que la transmisión ha terminado.
-  Serial.println("[INFO] Enviando byte de fin de transmisión (EOT)...");
-  sendByteToPIO(0x00);
-  */
-
   file.close();
   Serial.println("[INFO] Archivo cerrado.");
 }
@@ -285,6 +269,7 @@ void initializeControlPins() {
   Serial.println(F("[INFO] Configurando pines de control (STB/RDY)..."));
   pinMode(STB_PIN, OUTPUT);
   pinMode(AUX_PIN1, INPUT);
+  pinMode(AUX_PIN2, INPUT);
   // Estado inicial del Strobe: BAJO (inactivo para un pulso bajo-alto12º          )
   digitalWrite(STB_PIN, HIGH);       // bit0 del puerto B HIGH para detener Z80
   Serial.println(F("[ÉXITO] Pines de control configurados."));
@@ -292,13 +277,11 @@ void initializeControlPins() {
 }
 
 void initializeDataPins() {
-  Serial.println(F("[INFO] Configurando pines de datos (PA0-PA7)..."));
+  Serial.println(F("[INFO] Configurando pines de datos (PB0-PB7)..."));
   for (int i = 0; i < 8; i++) {
     pinMode(DATA_PINS[i], OUTPUT);
     digitalWrite(DATA_PINS[i], LOW); // Valor 0x00 por defecto
-  }
-
-    
+  }    
   Serial.println(F("[ÉXITO] Pines de datos configurados."));
 }
 
@@ -359,11 +342,7 @@ void initializeSDCard() {
     while (1);
   }
   Serial.println(F("[ÉXITO] Tarjeta SD inicializada."));
-/*
-  Serial.print(F("[INFO] Abriendo archivo para cargar en RAM: "));
-  Serial.println(FILENAME);
-  file = SD.open(FILENAME, FILE_READ);
-*/
+
 }
 
 
@@ -380,7 +359,7 @@ void setup() {
   //if (!checkFile(FILENAME)) while(1);             // Comprueba la validez del archivo
   Serial.println(F("-------------------------------------------------"));
   Serial.println(F("[INFO] La configuración ha finalizado."));
-  Serial.println(F("[INFO] La transferencia comenzará en 3 segundos..."));
+  Serial.println(F("[INFO] esperando 3 segundos..."));
   delay(3000);
 }
 
@@ -388,6 +367,7 @@ void setup() {
 //  LOOP PRINCIPAL (se ejecuta una sola vez)
 //======================================================================
 void loop() {
+
 
   testPIO(mc0, sizeof(mc0));
   // count256(); // Prueba de activación de leds (comprobar asignación correcta de pines)

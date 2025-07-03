@@ -4,7 +4,7 @@
 ; RMS
 ;------------------------------------------------------------
 
-ORG     $1800
+ORG     $2000
 ; puertos pio en microprofessor 1b        
 PA      EQU     $80
 PB      EQU     $81
