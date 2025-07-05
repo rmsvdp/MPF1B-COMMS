@@ -11,7 +11,7 @@ Se debe generar un conexionado de elementos de acuerdo al siguiente esquema elé
 ***Esquema eléctrico** : WIP*
 - Se recomienda una fuente externa de 5V para alimentar el sistema de forma estable.
 
-## 🛠️ Pines utilizados en Arduino nano
+### 🛠️ Pines utilizados en Arduino nano
 
 | Función        | Pin         |
 |----------------|-------------|
@@ -20,6 +20,16 @@ Se debe generar un conexionado de elementos de acuerdo al siguiente esquema elé
 | -- Sin uso --  | A1 (entrada)|
 | Data Pins      | 2 a 9       |
 | Modo Operacion | A2          |
+### 🛠️ Pines utilizados del MPF-1B
+
+| Pin            | Función                |
+|----------------|------------------------|
+| J2 21..28      | PIO PB (entrada)       |
+| J2 15          | PIO BITO - PA (entrada)|
+| J2 16          | PIO /ASTB     (entrada)|
+| J2 30          | GND COMÚN              |
+
+
 
 
 ## Operación
