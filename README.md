@@ -1,60 +1,54 @@
 # MPF-1B SD Card Loader
 
 Este proyecto para Arduino permite cargar un archivo binario desde una tarjeta SD y transferirlo byte a byte a un sistema Z80 (como el MPF-1B) a través de un chip Z80-PIO, utilizando un protocolo de handshake por hardware.
+# FICHA DEL PROYECTO
 
-## 🧩 Descripción
+* Sistema MPF-1b, con expansión adicional de 2K RAM ( 6116 ).
+* Placa con Arduino nano y módulo de SDCard para tarjetas microSD
 
-El programa:
+Se debe generar un conexionado de elementos de acuerdo al siguiente esquema eléctrico
 
-- Lee un archivo `file.bin` desde la tarjeta SD.
-- Usa pines digitales para enviar cada byte al bus de datos del sistema Z80.
-- Controla el proceso mediante un protocolo de "handshake" utilizando los pines `STB` (Strobe) y `RDY` (Ready).
-- Permite pruebas de comunicación mediante una función que recorre todos los valores de byte (`count256()`).
-
-## 📐 Protocolo de Handshake
-
-**Arduino → Z80-PIO**
-
-1. Arduino espera que el pin `RDY` esté en `LOW` (listo para recibir).
-2. Coloca los 8 bits del dato en los pines `DATA_PINS`.
-3. Genera un pulso en `STB` (`HIGH → LOW → HIGH`) para indicar que el dato está disponible.
-4. El PIO lee el dato y el proceso se repite.
-
-## ⚙️ Configuración
-
-- Archivo a cargar: `file.bin`
-- Tamaño máximo: 2048 bytes (2 KiB)
-- Timeout serie: 5000 ms
-
-## 🛠️ Pines utilizados
-
-| Función       | Pin         |
-|---------------|-------------|
-| CS SD Card    | 10          |
-| STB (Strobe)  | A0 (salida )|
-| RDY (Ready)   | A1 (entrada)|
-| Data Pins     | 2 a 9       |
-| Extra Pin     | A2          |
-
-## 🧪 Función de Prueba
-
-La función `count256()` envía los 256 valores posibles (0 a 255) para verificar el funcionamiento completo del bus de datos y la lógica de control.
-
-## ⚠️ Notas de Hardware
-
+***Esquema eléctrico** : WIP*
 - Se recomienda una fuente externa de 5V para alimentar el sistema de forma estable.
 
-## 🧑‍💻 Autores
+## 🛠️ Pines utilizados en Arduino nano
 
+| Función        | Pin         |
+|----------------|-------------|
+| CS SD Card     | 10          |
+| STB (Strobe)   | A0 (salida )|
+| -- Sin uso --  | A1 (entrada)|
+| Data Pins      | 2 a 9       |
+| Modo Operacion | A2          |
+
+
+## Operación
+
+Una vez conectados los sistemas el proceso de operación es el siguiente:
+
+1. Encender MPF-1B y escribir en la dirección $1800 el siguiente código máquina
+2. Posicionar el jumper A2 de la placa arduino en estado HIGH
+3. Ejecutar el programa cargado cuando la placa se inicie
+4. En la posición HIGH, el sistema volcará el firmware definitivo en la dirección $2000
+   dejando así liberados los 2K de RAM en la zona por defecto del MPF-1B
+5. Cambiar el jumper A2 a la posción LOW y reiniciar la placa
+6. Ejecutar el firmware en la posición $2000
+7. El archivo residente en la tarjeta se volcará a partir de la dirección $1800
+
+Dado lo limitado del sistema, el programa que hayamos editado en nuestro PC se deberá
+ensamblar y escribir en la memoria de la SD previamente al proceso.
+- Archivo a cargar: `file.bin`
+- Tamaño máximo: 2048 bytes (2 KiB)
+
+Lo importante de la carga desde fichero es que en el proceso de generación del mismo
+se añade una cabecera de 6 bytes, que lleva información sobre la dirección de memoria
+de carga, el tamaño y la dirección de ejecución. Si es disinta de cero el programa
+se ejecutará, sino el sistema de para.
+
+
+## 🧑‍💻 Agradecimientos
+
+Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
 - Alberto Alegre  
-- Ramón Merchán  
 - Juan Carlos Redondo  
 
-## 📅 Registro de Cambios
-
-- **29/06/2025**: Se crea función `pushByte()` para escribir 8 bits en el puerto.
-- **01/07/2025**: Añadida función `count256()` para pruebas de comunicación. Requiere FA externa.
-
----
-
-Este programa es útil para emular la carga de programas en sistemas retro como el MPF-1B a través de una interfaz moderna.
