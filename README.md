@@ -60,5 +60,31 @@ se ejecutará, sino el sistema de para.
 
 Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
 - Alberto Alegre  
-- Juan Carlos Redondo  
+- Juan Carlos Redondo
+
+# HISTORIA DEL DESARROLLO 
+
+Hasta aquí, la parte técnica tradicional, ahora os contaré la historia del desarrollo, con
+todo el proceso seguido.
+
+### La motivación
+
+Introducir a mi compañero Alberto en el mundo de la retroinformática, un viaje al pasado
+donde los sistemas eran realmente limitados, pero no por ello menos fascinantes.
+
+El microProfessor es un sistema de entrenamiento basado en el microprocesador Z80 de Zilog.
+El sistema obliga a programar en código máquina, debiendo el usuario generar manualmente todo
+el proceso de ensamblado del programa.
+Una de las partes más atrayentes es la posibilida de expandir el sistema. Tenemos acceso a todos
+los buses de datos, direcciones y señales de control del micro además de contar con un CTC, un 8255 y
+un Z80 PIO en otra batería de conectores.
+
+Se me ocurrió la posibilidad de codificar directamente un un sistema actual y generar el archivo binario
+que posteriormente pasaríamos al MPF. Para ello decidí utilizar un arduino nano y un lector de SD.
+
+### Teoría de la comnunicación entre los sistemas
+
+
+
+
 
