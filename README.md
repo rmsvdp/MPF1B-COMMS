@@ -12,7 +12,7 @@ Se debe generar un conexionado de elementos de acuerdo al siguiente esquema elé
 - Se recomienda una fuente externa de 5V para alimentar el sistema de forma estable.
 
 
-![Circuito](https://github.com/rmsvdp/MPF1B-COMMS/blob/main/CIRCUITO.png)
+![Circuito](/CIRCUITO.png)
 
 
 ### 🛠️ Pines utilizados en Arduino nano
@@ -87,6 +87,25 @@ Se me ocurrió la posibilidad de codificar directamente un un sistema actual y g
 que posteriormente pasaríamos al MPF. Para ello decidí utilizar un arduino nano y un lector de SD.
 
 ### Teoría de la comnunicación entre los sistemas
+
+Para interactuar entre el Z80 y el Arduino, utilizaremos los puertos del Z80 PIO. El esquema conceptual de la comunicación
+se presenta en la siguiente figura:
+
+El Z80 espera mientras no haya un flanco de 0->1 en el Bit 0 del puerto A. Cuando este se produce lee el valor que 
+se encuentra en el puerto B.
+Cuando se inicia el protocolo el Bit 0 debe de estar a 1 , indicando dato no disponible.
+El Arduino escribe el valor en el puerto B, espera un tiempo ( 25msec) y envía la señal de 0 a 1 para que lea el Z80.
+
+#### Inicio y fin de la transmisión
+
+En ambas partes se conoce el tamaño de la transmisión y ambas partes dejan de transmitir/recibir cuando se han enviado
+todos los bytes requeridos. Esto es así , porque se define una cabecera de 6  bytes con la siguiente estructura:
+
+| Bytes       | Descripcion         |
+|----------------|-------------|
+|0 - 1      |Dirección de carga del bloque|
+|2 - 3      |Número de bytes a transmitir|
+|4 -5       |Dirección de ejecución una vez terminada la transmisión|
 
 
 
