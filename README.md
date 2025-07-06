@@ -1,8 +1,13 @@
 # MPF-1B SD Card Loader
 
 Este proyecto para Arduino permite cargar un archivo binario desde una tarjeta SD y transferirlo byte a byte a un sistema Z80 (como el MPF-1B) a través de un chip Z80-PIO, utilizando un protocolo de handshake por hardware.
+
+
+
 # 🗂️ FICHA DEL PROYECTO
 
+ $${\color{red}Este \space documento \space puede \space tener \space errores \space en \space algunas \space conexiones }$$
+ 
 * Sistema MPF-1b, con expansión adicional de 2K RAM ( 6116 ).
 * Placa con Arduino nano y módulo de SDCard para tarjetas microSD
 
@@ -78,7 +83,7 @@ Me gustaría añadir las siguientes funcionalidades
 Este proyecto esta dedicado a mi compañero Alberto, que por su juventud, nunca había interactuado
 con sistemas tan viejunos. Me ha aportado mucha satisfacción, ver su asombro en las fases iniciales 
 del proyecto y su determinación a continuarlo hasta el final.
-Te llevas al menos saber que signfica 3E 0A , que es la puntación que te mereces chaval!!
+Te llevas al menos saber que significa 3E 0A , que es la puntación que te mereces chaval !! 
 
 
 
@@ -129,7 +134,7 @@ En la versión actual del firmware, no se pueden trasnmitir más de 2Kbytes. Ser
 el stack en la memoria que comienza en $1800. Si el cargador se ubica en $1800 , si se podrían aplicar los 2Kbytes
 comenzado en $2000
 
-## 🐛Incidentes y curiosidades
+## 🐛 Incidentes y curiosidades
 
 Cuando se acomete un desarrollo vinculado al hardware y se programa a bajo nivel ocurren cosas como las siguientes:
 
