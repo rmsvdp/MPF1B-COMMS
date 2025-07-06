@@ -1,14 +1,14 @@
 # MPF-1B SD Card Loader
 
 Este proyecto para Arduino permite cargar un archivo binario desde una tarjeta SD y transferirlo byte a byte a un sistema Z80 (como el MPF-1B) a través de un chip Z80-PIO, utilizando un protocolo de handshake por hardware.
-# FICHA DEL PROYECTO
+# 🗂️ FICHA DEL PROYECTO
 
 * Sistema MPF-1b, con expansión adicional de 2K RAM ( 6116 ).
 * Placa con Arduino nano y módulo de SDCard para tarjetas microSD
 
 Se debe generar un conexionado de elementos de acuerdo al siguiente esquema eléctrico
 
-***Esquema eléctrico** 
+
 - Se recomienda una fuente externa de 5V para alimentar el sistema de forma estable.
 
 
@@ -36,7 +36,7 @@ Se debe generar un conexionado de elementos de acuerdo al siguiente esquema elé
 
 
 
-## Operación
+## ⚔️ Operación
 
 Una vez conectados los sistemas el proceso de operación es el siguiente:
 
@@ -59,6 +59,15 @@ se añade una cabecera de 6 bytes, que lleva información sobre la dirección de
 de carga, el tamaño y la dirección de ejecución. Si es disinta de cero el programa
 se ejecutará, sino el sistema de para.
 
+## 🔥 Mejoras y ampliaciones
+
+A última hora se ha añadido un jumper posicional que no está implementado, aunque
+el código si está preparado ( !pero no probado!)
+Me gustaría añadir las siguientes funcionalidades
+
+1. Trasmitir desde el PC via usb el programa a subir y escribirlo en la SD
+2. Hacer un pequeño programa en JavaSwing para implementar el intrefaz gráfico del punto 1
+3. Implementar un emulador del micropofesor y poder ensamblar y depurar en él.
 
 ## 🧑‍💻 Agradecimientos
 
@@ -66,12 +75,11 @@ Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
 - Alberto Alegre  
 - Juan Carlos Redondo
 
-# HISTORIA DEL DESARROLLO 
 
-Hasta aquí, la parte técnica tradicional, ahora os contaré la historia del desarrollo, con
-todo el proceso seguido.
 
-## La motivación
+# 📖 HISTORIA DEL DESARROLLO 
+
+## 🎴 La motivación
 
 Introducir a mi compañero Alberto en el mundo de la retroinformática, un viaje al pasado
 donde los sistemas eran realmente limitados, pero no por ello menos fascinantes.
@@ -86,7 +94,7 @@ un Z80 PIO en otra batería de conectores.
 Se me ocurrió la posibilidad de codificar directamente un un sistema actual y generar el archivo binario
 que posteriormente pasaríamos al MPF. Para ello decidí utilizar un arduino nano y un lector de SD.
 
-## Teoría de la comnunicación entre los sistemas
+## ✈️ Teoría de la comnunicación entre los sistemas
 
 Para interactuar entre el Z80 y el Arduino, utilizaremos los puertos del Z80 PIO. El esquema conceptual de la comunicación
 se presenta en la siguiente figura:
@@ -98,7 +106,7 @@ se encuentra en el puerto B.
 Cuando se inicia el protocolo el Bit 0 debe de estar a 1 , indicando dato no disponible.
 El Arduino escribe el valor en el puerto B, espera un tiempo determinado y envía la señal de 0 a 1 para que lea el Z80.
 
-#### Inicio y fin de la transmisión
+#### 🛰️ Inicio y fin de la transmisión
 
 En ambas partes se conoce el tamaño de la transmisión y ambas partes dejan de transmitir/recibir cuando se han enviado
 todos los bytes requeridos. Esto es así , porque se define una cabecera de 6  bytes con la siguiente estructura:
@@ -117,7 +125,7 @@ En la versión actual del firmware, no se pueden trasnmitir más de 2Kbytes. Ser
 el stack en la memoria que comienza en $1800. Si el cargador se ubica en $1800 , si se podrían aplicar los 2Kbytes
 comenzado en $2000
 
-## Incidentes y curiosidades
+## 🐛Incidentes y curiosidades
 
 Cuando se acomete un desarrollo vinculado al hardware y se programa a bajo nivel ocurren cosas como las siguientes:
 
@@ -133,7 +141,7 @@ Nada más lejos de la realidad, observen:
 - El protocolo trata por igual a todos los valores. Enviando una serie de patrones, descubrí que el bit 1 del puerto A del PIO en mi placa MPF1B esta estropeado.
   Cambié el protocolo para utilizar el puerto B para recibir y el bit 0 del puerto A como control y se terminaron los problemas.
 
-# Videos de pruebas
+# 📹 Videos de pruebas
 
 Adjunto la parte más agradable, un par de vídeos de algunas pruebas realizadas
 
