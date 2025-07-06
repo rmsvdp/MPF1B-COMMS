@@ -8,8 +8,12 @@ Este proyecto para Arduino permite cargar un archivo binario desde una tarjeta S
 
 Se debe generar un conexionado de elementos de acuerdo al siguiente esquema eléctrico
 
-***Esquema eléctrico** : WIP*
+***Esquema eléctrico** 
 - Se recomienda una fuente externa de 5V para alimentar el sistema de forma estable.
+
+
+![Circuito](https://github.com/rmsvdp/MPF1B-COMMS/blob/main/CIRCUITO.png)
+
 
 ### 🛠️ Pines utilizados en Arduino nano
 
