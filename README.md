@@ -71,7 +71,7 @@ Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
 Hasta aquí, la parte técnica tradicional, ahora os contaré la historia del desarrollo, con
 todo el proceso seguido.
 
-### La motivación
+## La motivación
 
 Introducir a mi compañero Alberto en el mundo de la retroinformática, un viaje al pasado
 donde los sistemas eran realmente limitados, pero no por ello menos fascinantes.
@@ -86,7 +86,7 @@ un Z80 PIO en otra batería de conectores.
 Se me ocurrió la posibilidad de codificar directamente un un sistema actual y generar el archivo binario
 que posteriormente pasaríamos al MPF. Para ello decidí utilizar un arduino nano y un lector de SD.
 
-### Teoría de la comnunicación entre los sistemas
+## Teoría de la comnunicación entre los sistemas
 
 Para interactuar entre el Z80 y el Arduino, utilizaremos los puertos del Z80 PIO. El esquema conceptual de la comunicación
 se presenta en la siguiente figura:
@@ -116,6 +116,26 @@ entre transiciones de 1 ->0 y de 0-> 1 en el arduino, excesivamente conservador.
 En la versión actual del firmware, no se pueden trasnmitir más de 2Kbytes. Sería preciso descontar el tamaño ocupado por
 el stack en la memoria que comienza en $1800. Si el cargador se ubica en $1800 , si se podrían aplicar los 2Kbytes
 comenzado en $2000
+
+## Incidentes y curiosidades
+
+Cuando se acomete un desarrollo vinculado al hardware y se programa a bajo nivel ocurren cosas como las siguientes:
+
+- El programa que maneja la SD funciona perfectamente y de repente deja de funcionar al añadir unos cuandos leds para hacer mas visual el proceso
+- La señal de strobe parece no tener efecto aunque lo dice la documentación
+- Solucionados todos los problemas, la transmisión es perfecta, salvo para algunos valores determinados
+
+Esto son cosas que no suceden en plataformas de alto nivel y pueden generar algún que otro dolor de cabeza, o incluso pensar que algo sobrenatural nos acompaña.
+Nada más lejos de la realidad, observen:
+
+- La SD deja de funcionar porque no recibe suficiente tensión del arduino. Añadimos una fuente estabiliza adicional y resuelto.
+- La señal de strobe si funciona, lo que ocurría, es que no estaba conectada a su pin correcto, sino una posición más a la izquierda. Efectos de la vista cansada.
+- El protocolo trata por igual a todos los valores. Enviando una serie de patrones, descubrí que el bit 1 del puerto A del PIO en mi placa MPF1B esta estropeado.
+  Cambié el protocolo para utilizar el puerto B para recibir y el bit 0 del puerto A como control y se terminaron los problemas.
+
+# Videos de pruebas
+
+Adjunto la parte más agradable, un par de vídeos de algunas pruebas realizadas
 
 
 
