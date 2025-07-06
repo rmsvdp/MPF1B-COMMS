@@ -24,6 +24,10 @@ Se debe generar un conexionado de elementos de acuerdo al siguiente esquema elé
 | -- Sin uso --  | A1 (entrada)|
 | Data Pins      | 2 a 9       |
 | Modo Operacion | A2          |
+| MOSI           | 11          |
+| MISO           | 12          |
+| SCK            | 13          |
+
 ### 🛠️ Pines utilizados del MPF-1B
 
 | Pin            | Función                |
@@ -69,11 +73,12 @@ Me gustaría añadir las siguientes funcionalidades
 2. Hacer un pequeño programa en JavaSwing para implementar el intrefaz gráfico del punto 1
 3. Implementar un emulador del micropofesor y poder ensamblar y depurar en él.
 
-## 🧑‍💻 Agradecimientos
+## 🧑‍💻 Dedicatoria
 
-Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
-- Alberto Alegre  
-- Juan Carlos Redondo
+Este proyecto esta dedicado a mi compañero Alberto, que por su juventud, nunca había interactuado
+con sistemas tan viejunos. Me ha aportado mucha satisfacción, ver su asombro en las fases iniciales 
+del proyecto y su determinación a continuarlo hasta el final.
+Te llevas al menos saber que signfica 3E 0A , que es la puntación que te mereces chaval!!
 
 
 
@@ -81,8 +86,7 @@ Este proyecto no hubiese sido posible sin la colaboración de mis compañeros :
 
 ## 🎴 La motivación
 
-Introducir a mi compañero Alberto en el mundo de la retroinformática, un viaje al pasado
-donde los sistemas eran realmente limitados, pero no por ello menos fascinantes.
+Realizar un viaje al pasado, donde los sistemas eran realmente limitados, pero no por ello menos fascinantes.
 
 El microProfessor es un sistema de entrenamiento basado en el microprocesador Z80 de Zilog.
 El sistema obliga a programar en código máquina, debiendo el usuario generar manualmente todo
