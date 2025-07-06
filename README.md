@@ -137,6 +137,12 @@ Nada más lejos de la realidad, observen:
 
 Adjunto la parte más agradable, un par de vídeos de algunas pruebas realizadas
 
+https://github.com/user-attachments/assets/f23a9b72-4138-4dd3-8b18-afe6aad5939e
+
+https://github.com/user-attachments/assets/fcb6d47e-9f2a-44cc-a080-19289955b77e
+
+
+
 
 
 
