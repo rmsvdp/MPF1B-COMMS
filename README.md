@@ -91,10 +91,12 @@ que posteriormente pasaríamos al MPF. Para ello decidí utilizar un arduino nan
 Para interactuar entre el Z80 y el Arduino, utilizaremos los puertos del Z80 PIO. El esquema conceptual de la comunicación
 se presenta en la siguiente figura:
 
+![Protocolo](/PROTOCOLO.png)
+
 El Z80 espera mientras no haya un flanco de 0->1 en el Bit 0 del puerto A. Cuando este se produce lee el valor que 
 se encuentra en el puerto B.
 Cuando se inicia el protocolo el Bit 0 debe de estar a 1 , indicando dato no disponible.
-El Arduino escribe el valor en el puerto B, espera un tiempo ( 25msec) y envía la señal de 0 a 1 para que lea el Z80.
+El Arduino escribe el valor en el puerto B, espera un tiempo determinado y envía la señal de 0 a 1 para que lea el Z80.
 
 #### Inicio y fin de la transmisión
 
@@ -107,6 +109,13 @@ todos los bytes requeridos. Esto es así , porque se define una cabecera de 6  b
 |2 - 3      |Número de bytes a transmitir|
 |4 -5       |Dirección de ejecución una vez terminada la transmisión|
 
+#### Velocidad de transmisión y limitaciones
+
+La velocidad de transmisión depende del tiempo de procesamiento del Z80, se ha elegido un valor empírico de 25 msec
+entre transiciones de 1 ->0 y de 0-> 1 en el arduino, excesivamente conservador. No se han hecho pruebas para determina la tasas máxima posible.
+En la versión actual del firmware, no se pueden trasnmitir más de 2Kbytes. Sería preciso descontar el tamaño ocupado por
+el stack en la memoria que comienza en $1800. Si el cargador se ubica en $1800 , si se podrían aplicar los 2Kbytes
+comenzado en $2000
 
 
 
