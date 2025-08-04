@@ -1,0 +1,23 @@
+Emulador de Microprofessor 1B para windows 11
+-----------------------------------------------
+
+* Descomprimir y ejecutar invocando a Zero.exe
+
+* Faltan muchas cosas pero al menos:
+
+- Se pueden subir binarios en cualquier posición válida de memoria
+- Se pueden salvar a disco zonas de memoria
+- Se puede ejecutar paso a paso código maquina con visualización de registros del Z80
+- Implementa en teoría el 100% de la Bios 
+	- Comprobado :
+		- recorrer memoria, insertar/modificar zonas de memoria
+		- Ejecutar código máquina
+		- Visualización del display
+		- Comportamiento de los leds
+	- Pendiente:
+		- El resto salvo no implementado
+	- No implementado:
+		- Rutinas de save/load Cassette
+		- Interacción con Z80 PIO / CTC
+(c) RMSVDP 04/08/2025
+-----------------------------------------------------

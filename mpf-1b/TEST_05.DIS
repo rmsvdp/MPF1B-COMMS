@@ -1,0 +1,31 @@
+1800    3E 4F		LD  	A,4F
+1802	D3 83   	OUT  	(CB),A
+1804	3E CF   	LD  	A,CF       
+1806	D3 82   	OUT  	(CA),A
+1808	3E FF   	LD  	A,FF
+180A	D3 82   	OUT  	(CA),A
+180C	21 00 19	LD		 HL,1900
+180F	CD 24 18	CALL    1824
+1812	77	        LD      (HL),A       
+1813	23	        INC     HL
+1814	CD 24 18	CALL    1824
+1817	77	        LD      (HL),A       
+1818	23	        INC     HL
+1819	CD 24 18	CALL    1824
+181C	77	        LD      (HL),A       
+181D	23	        INC     HL
+181E	CD 24 18	CALL    1824
+1821	77	        LD      (HL),A       
+1822	23	        INC     HL      
+1823    76			HALT
+;-----------------------------------------------
+;1824 : Lee de forma asíncrona un byte
+;-----------------------------------------------
+1824 	DB 81		IN A,(PB)        ; lee estado pin 0
+1826	CB 47		BIT 0,A          ; Test bit 0
+1828	47 FA       JR NZ,1824     
+182A	DB 80	    IN A,(PA)
+182C	CB 47       BIT 0,A          ; Test bit 0
+182E	28 FA       JR Z, 1829
+1830	DB 81		IN A,(PB)
+1832	C9	        RET
