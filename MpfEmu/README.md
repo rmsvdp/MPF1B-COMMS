@@ -222,9 +222,10 @@ También se debe implementar en las instrucciones OUT de la clase mpf1.cs
 
 **SIN implementar**
 
-Comprobar que la emulación es fiel en T-estados y tiempo de ejecución
-Mejoras en el código.
-Incorporar la etiquetas en el Debugger. Está casi en la adaptación que realicé.
+* Comprobar que la emulación es fiel en T-estados y tiempo de ejecución
+* Mejoras en el código.
+* Incorporar la etiquetas en el Debugger. Está casi en la adaptación que realicé.
+* No tiene sonido (el driver DirectX existe, pero es preciso integrarlo en instrucciones OUT)
 
 **Implementación de los leds TONE y HALT**
 
