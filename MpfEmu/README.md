@@ -2,6 +2,8 @@
 
 Emulador del equipo Microprofessor 1, modelo 1B.
 
+Revisar leer.txt para puesta en marcha.
+
 # Antecedentes
 
 Un emulador es un programa que recrea el funcionamiento de un determinado sistema o dispositivo.
