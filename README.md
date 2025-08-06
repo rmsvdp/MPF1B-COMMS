@@ -2,7 +2,8 @@
 
 Este proyecto para Arduino permite cargar un archivo binario desde una tarjeta SD y transferirlo byte a byte a un sistema Z80 (como el MPF-1B) a través de un chip Z80-PIO, utilizando un protocolo de handshake por hardware.
 
-Se ha incluido un proyecto adicional, que contiene un emulador sencillo ( todavía en desarrollo ) del microprofesor 1B para windows 11. *En el directorio existe un readme.md que contiene una explicación técnica.
+Se ha incluido un proyecto adicional, que contiene un emulador sencillo ( todavía en desarrollo ) del microprofesor 1B para windows 11. 
+**En el directorio existe un readme.md que contiene una explicación técnica.**
 
 
 
