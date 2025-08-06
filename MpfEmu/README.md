@@ -226,6 +226,7 @@ También se debe implementar en las instrucciones OUT de la clase mpf1.cs
 * Mejoras en el código.
 * Incorporar la etiquetas en el Debugger. Está casi en la adaptación que realicé.
 * No tiene sonido (el driver DirectX existe, pero es preciso integrarlo en instrucciones OUT)
+* Z80 PIO y Z80 CTC : Desarrollar clases e implementar ( podría necesitar hw adicional )
 
 **Implementación de los leds TONE y HALT**
 
